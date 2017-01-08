@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
 	"bufio"
 	"log"
 	"os"
@@ -24,20 +23,22 @@ const (
 
 // Split in words
 func MapFunc(file string, value string) (res []KeyValue) {
-	debug("Map %v\n", value)
+	debug("Map %v\n", file)
 	words := strings.Fields(value)
 	for _, w := range words {
 		kv := KeyValue{w, ""}
 		res = append(res, kv)
 	}
+	debug("Map %v Finish!\n",file)
 	return
 }
 
 // Just return key
 func ReduceFunc(key string, values []string) string {
-	for _, e := range values {
-		debug("Reduce %s %v\n", key, e)
-	}
+	// for _, e := range values {
+	// 	debug("Reduce %s %v\n", key, e)
+	// }
+	//debug("Reduce %s\n",key)
 	return ""
 }
 

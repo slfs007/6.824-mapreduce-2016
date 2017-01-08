@@ -1,5 +1,35 @@
 package mapreduce
 
+import (
+	"encoding/json"
+	"os"
+	"sort"
+	"log"
+	"io/ioutil"
+	"bytes"
+)
+func getKeyVals(jobName string,reduceTaskNumber int,nMap int) (kvs map[string][]string,keys []string){
+	kvs = make(map[string][]string)
+	for i := 0; i < nMap; i++ {
+		data,err := ioutil.ReadFile(reduceName(jobName,i,reduceTaskNumber))
+		if err != nil {
+			log.Fatal("ReadFile:",err);
+		} 
+		dec := json.NewDecoder(bytes.NewReader(data))
+		for dec.More() {
+			var kv KeyValue
+			dec.Decode(&kv)
+			_,ok := kvs[kv.Key]
+			//ugly code! I just learn Go with 2 days
+			if ok == false {
+				keys = append(keys,kv.Key)
+				kvs[kv.Key] = make([]string,0)	
+			}
+			kvs[kv.Key] = append(kvs[kv.Key],kv.Value)
+		}
+	}
+	return
+}
 // doReduce does the job of a reduce worker: it reads the intermediate
 // key/value pairs (produced by the map phase) for this task, sorts the
 // intermediate key/value pairs by key, calls the user-defined reduce function
@@ -31,4 +61,16 @@ func doReduce(
 	// 	enc.Encode(KeyValue{key, reduceF(...)})
 	// }
 	// file.Close()
+	kvs,keys := getKeyVals(jobName,reduceTaskNumber,nMap)
+	sort.Strings(keys)
+	mergeFile,err := os.Create(mergeName(jobName,reduceTaskNumber))
+	if err != nil {
+		log.Fatal("mergeFile create:",err);
+	}
+	enc := json.NewEncoder(mergeFile)
+	
+	for _,key := range keys {
+		enc.Encode(KeyValue{key,reduceF(key,kvs[key])})
+	}
+	mergeFile.Close()
 }
