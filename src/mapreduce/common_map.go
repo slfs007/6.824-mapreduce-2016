@@ -2,7 +2,6 @@ package mapreduce
 
 import (
 	"hash/fnv"
-	"fmt"
 	"io/ioutil"
 	"encoding/json"
 	"os"
@@ -58,7 +57,6 @@ func doMap(
 		if err != nil {
 			log.Fatal("os.Create: ", err)
 		}
-		fmt.Println(file.Name())
 		files = append(files,file)
 		enc := json.NewEncoder(file)
 		encs = append(encs,enc)
