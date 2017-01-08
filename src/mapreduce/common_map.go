@@ -45,9 +45,7 @@ func doMap(
 	//     err := enc.Encode(&kv)
 	//
 	// Remember to close the file after you have written all the values!
-	fmt.Println("doMap:");
 	data,err := ioutil.ReadFile(inFile)
-	
 	if err != nil{
 	 	panic(err)
 	 }
