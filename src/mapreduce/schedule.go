@@ -9,7 +9,7 @@ func addTaskToChannel(task_max int,c chan int){
 		c <- i
 	}
 }
-func workerRun(	mr *Master,
+func (mr *Master)workerRun(
 				phase jobPhase,
 				task_c chan int,
 				task_finished *int64,
@@ -57,13 +57,13 @@ func (mr *Master) schedule(phase jobPhase) {
 	var task_finished int64
 	mr.Lock()
 	for _,worker := range mr.workers {
-		go workerRun(mr,phase,task_c,&task_finished,worker,nios)
+		go mr.workerRun(phase,task_c,&task_finished,worker,nios)
 	}
 	mr.Unlock()
 	for atomic.LoadInt64(&task_finished) < int64(ntasks){
 		select {
 			case new_worker := <- mr.registerChannel:
-				go workerRun(mr,phase,task_c,&task_finished,new_worker,nios)
+				go mr.workerRun(phase,task_c,&task_finished,new_worker,nios)
 			default:
 				time.Sleep(100 * time.Millisecond)	
 		}
