@@ -30,10 +30,7 @@ type KeyValue struct {
 	Key   string
 	Value string
 }
-type KeyValues struct{
-	Key string
-	Values []string
-}
+
 // reduceName constructs the name of the intermediate file which map task
 // <mapTask> produces for reduce task <reduceTask>.
 func reduceName(jobName string, mapTask int, reduceTask int) string {
