@@ -74,8 +74,6 @@ func (mr *Master) schedule(phase jobPhase) {
 					task_finished++
 				}
 		}
-	}
-	close(task_c)
-	
+	}	
 	fmt.Printf("Schedule: %v phase done\n", phase)
 }
