@@ -2,7 +2,6 @@ package mapreduce
 
 import "fmt"
 import "sync/atomic"
-import "time"
 
 func addTaskToChannel(task_max int,c chan int,task_map *map[int]bool){
 	for i := 0; i < task_max; i++ {
@@ -74,8 +73,6 @@ func (mr *Master) schedule(phase jobPhase) {
 					task_map[finished_task] = true
 					task_finished++
 				}
-			default:
-				time.Sleep(10 * time.Millisecond)	
 		}
 	}
 	close(task_c)
