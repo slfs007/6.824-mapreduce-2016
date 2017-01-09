@@ -46,7 +46,15 @@ func reduceF(key string, values []string) string {
 	}
 	return strconv.Itoa(int(count))
 }
-
+func port(suffix string) string {
+	s := "/var/tmp/824-"
+	s += strconv.Itoa(os.Getuid()) + "/"
+	os.Mkdir(s, 0777)
+	s += "mr"
+	s += strconv.Itoa(os.Getpid()) + "-"
+	s += suffix
+	return s
+}
 // Can be run in 3 ways:
 // 1) Sequential (e.g., go run wc.go master sequential x1.txt .. xN.txt)
 // 2) Master (e.g., go run wc.go master localhost:7777 x1.txt .. xN.txt)
@@ -59,7 +67,11 @@ func main() {
 		if os.Args[2] == "sequential" {
 			mr = mapreduce.Sequential("wcseq", os.Args[3:], 3, mapF, reduceF)
 		} else {
+
 			mr = mapreduce.Distributed("wcseq", os.Args[3:], 3, os.Args[2])
+			for i := 0 ; i < 4; i++ {
+				go mapreduce.RunWorker(os.Args[2], port("worker"+strconv.Itoa(i)),mapF, reduceF, -1)
+			}
 		}
 		mr.Wait()
 	} else {
