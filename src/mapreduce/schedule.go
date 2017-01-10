@@ -1,12 +1,10 @@
 package mapreduce
 
 import "fmt"
-import "sync/atomic"
 
-func addTaskToChannel(task_max int,c chan int,task_map *map[int]bool){
+func addTaskToChannel(task_max int,c chan int){
 	for i := 0; i < task_max; i++ {
 		c <- i
-		(*task_map)[i] = false
 	}
 }
 func (mr *Master)workerRun(
@@ -19,6 +17,7 @@ func (mr *Master)workerRun(
 	doTaskArgs.JobName = mr.jobName
 	doTaskArgs.Phase = phase
 	doTaskArgs.NumOtherPhase = nios
+	//task_c.RLock()
 	for task := range task_c {
 		doTaskArgs.TaskNumber = task
 		doTaskArgs.File = mr.files[task]
@@ -30,6 +29,7 @@ func (mr *Master)workerRun(
 			break
 		}
 	}
+	//task_c.RUnlock()
 }
 // schedule starts and waits for all tasks in the given phase (Map or Reduce).
 func (mr *Master) schedule(phase jobPhase) {
@@ -56,23 +56,24 @@ func (mr *Master) schedule(phase jobPhase) {
 	task_map := make(map[int]bool)
 	task_c := make(chan int)
 	finished_c := make(chan int)
-
-	go addTaskToChannel(ntasks,task_c,&task_map)
+	go addTaskToChannel(ntasks,task_c)
 	var task_finished int64
 	mr.Lock()
 	for _,worker := range mr.workers {
 		go mr.workerRun(phase,task_c,finished_c,worker,nios)
 	}
 	mr.Unlock()
-	for atomic.LoadInt64(&task_finished) < int64(ntasks){
+	for task_finished < int64(ntasks){
 		select {
 			case new_worker := <- mr.registerChannel:
 				go mr.workerRun(phase,task_c,finished_c,new_worker,nios)
 			case finished_task := <- finished_c:
-				if task_map[finished_task] == false{
-					task_map[finished_task] = true
-					task_finished++
+				_,ok := task_map[finished_task]
+				if ok == true{
+					continue
 				}
+				task_map[finished_task] = true
+				task_finished++
 		}
 	}	
 	fmt.Printf("Schedule: %v phase done\n", phase)
